@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react'
-import { Album } from '../types'
+import { Album, AlbumCategory } from '../types'
 import './Modal.css'
 
 interface Props {
@@ -12,6 +12,7 @@ interface Props {
     isPublic: boolean
     hasPassword: boolean
     password?: string
+    categoryId: number
   }) => void
   editingAlbum?: Album
 }
@@ -23,6 +24,8 @@ export function CreateAlbumModal({ isOpen, onClose, onSubmit, editingAlbum }: Pr
   const [isPublic, setIsPublic] = useState(true)
   const [hasPassword, setHasPassword] = useState(false)
   const [password, setPassword] = useState('')
+  const [categoryId, setCategoryId] = useState(1) // 默認使用 "通用" 類別
+  const [categories, setCategories] = useState<AlbumCategory[]>([])
   const [error, setError] = useState('')
 
   useEffect(() => {
@@ -32,6 +35,7 @@ export function CreateAlbumModal({ isOpen, onClose, onSubmit, editingAlbum }: Pr
       setDescription(editingAlbum.description || '')
       setIsPublic(editingAlbum.isPublic)
       setHasPassword(editingAlbum.hasPassword || false)
+      setCategoryId(editingAlbum.categoryId || 1)
       setPassword('')
     } else {
       setTitle('')
@@ -40,8 +44,17 @@ export function CreateAlbumModal({ isOpen, onClose, onSubmit, editingAlbum }: Pr
       setIsPublic(true)
       setHasPassword(false)
       setPassword('')
+      setCategoryId(1)
     }
   }, [editingAlbum, isOpen])
+
+  useEffect(() => {
+    // 獲取所有類別
+    fetch('http://localhost:5001/api/categories')
+      .then(res => res.json())
+      .then(data => setCategories(data))
+      .catch(err => console.error('獲取類別失敗:', err))
+  }, [])
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault()
@@ -59,7 +72,8 @@ export function CreateAlbumModal({ isOpen, onClose, onSubmit, editingAlbum }: Pr
       description, 
       isPublic, 
       hasPassword,
-      password: hasPassword ? password : undefined
+      password: hasPassword ? password : undefined,
+      categoryId
     })
   }
 
@@ -84,6 +98,22 @@ export function CreateAlbumModal({ isOpen, onClose, onSubmit, editingAlbum }: Pr
               placeholder="輸入相簿標題"
               required
             />
+          </div>
+
+          <div className="form-group">
+            <label htmlFor="category">類別</label>
+            <select
+              id="category"
+              value={categoryId}
+              onChange={(e) => setCategoryId(parseInt(e.target.value))}
+              required
+            >
+              {categories.map(category => (
+                <option key={category.id} value={category.id}>
+                  {category.name}
+                </option>
+              ))}
+            </select>
           </div>
 
           <div className="form-group">

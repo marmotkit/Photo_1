@@ -206,4 +206,274 @@ form {
 
 .submit-btn:hover {
   background-color: #7b82ff;
+}
+
+.form-group select {
+  width: 100%;
+  padding: 0.8rem 1rem;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: #2a2a2a;
+  color: #fff;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+  appearance: none;
+  background-image: url("data:image/svg+xml;charset=UTF-8,%3csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3e%3cpolyline points='6 9 12 15 18 9'%3e%3c/polyline%3e%3c/svg%3e");
+  background-repeat: no-repeat;
+  background-position: right 1rem center;
+  background-size: 1em;
+}
+
+.form-group select:focus {
+  border-color: #646cff;
+  outline: none;
+}
+
+.form-group select option {
+  background: #2a2a2a;
+  color: #fff;
+  padding: 0.5rem;
+}
+
+/* 類別管理樣式 */
+.category-input-group {
+  display: flex;
+  gap: 1rem;
+  margin-bottom: 2rem;
+}
+
+.category-input {
+  flex: 1;
+  padding: 0.8rem 1rem;
+  border: 1px solid #333;
+  border-radius: 8px;
+  background: #2a2a2a;
+  color: #fff;
+  font-size: 1rem;
+  transition: border-color 0.3s;
+}
+
+.category-input:focus {
+  border-color: #646cff;
+  outline: none;
+}
+
+.add-category-btn,
+.edit-category-btn,
+.delete-category-btn,
+.save-category-btn,
+.cancel-category-btn {
+  padding: 0.8rem 1.2rem;
+  border-radius: 8px;
+  border: none;
+  font-size: 0.9rem;
+  cursor: pointer;
+  transition: all 0.3s;
+}
+
+.add-category-btn {
+  background: #646cff;
+  color: #fff;
+}
+
+.add-category-btn:hover {
+  background: #7b82ff;
+}
+
+.categories-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.category-item {
+  background: #2a2a2a;
+  border-radius: 8px;
+  padding: 1rem;
+}
+
+.category-view-group {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.category-name {
+  color: #fff;
+  font-size: 1rem;
+}
+
+.category-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.edit-category-btn {
+  background: #4a4a4a;
+  color: #fff;
+}
+
+.edit-category-btn:hover:not(:disabled) {
+  background: #5a5a5a;
+}
+
+.delete-category-btn {
+  background: #dc2626;
+  color: #fff;
+}
+
+.delete-category-btn:hover:not(:disabled) {
+  background: #ef4444;
+}
+
+.category-edit-group {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.save-category-btn {
+  background: #22c55e;
+  color: #fff;
+}
+
+.save-category-btn:hover {
+  background: #16a34a;
+}
+
+.cancel-category-btn {
+  background: #4a4a4a;
+  color: #fff;
+}
+
+.cancel-category-btn:hover {
+  background: #5a5a5a;
+}
+
+button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+/* 展示設置樣式 */
+.settings-section {
+  padding: 1.5rem;
+}
+
+.settings-section h3 {
+  color: #fff;
+  font-size: 1.1rem;
+  margin-bottom: 1.5rem;
+  padding-left: 0.5rem;
+}
+
+.sort-options {
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  padding: 0.5rem;
+  background: #1a1a1a;
+  border-radius: 12px;
+}
+
+.sort-option {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  padding: 1rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.2s;
+  min-height: 64px;
+}
+
+.sort-option:hover {
+  background: #2a2a2a;
+}
+
+.sort-option input[type="radio"] {
+  margin-top: 0.25rem;
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  accent-color: #646cff;
+}
+
+.sort-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  flex: 1;
+}
+
+.sort-title {
+  color: #fff;
+  font-weight: 500;
+  font-size: 1rem;
+  line-height: 1.2;
+}
+
+.sort-description {
+  color: #999;
+  font-size: 0.9rem;
+  line-height: 1.4;
+}
+
+/* 上傳模態框樣式 */
+.upload-area {
+  border: 2px dashed #444;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  margin: 1rem 0;
+  transition: all 0.3s;
+  cursor: pointer;
+  background: #1a1a1a;
+}
+
+.upload-area:hover {
+  border-color: #646cff;
+  background: #2a2a2a;
+}
+
+.upload-area .icon {
+  font-size: 2rem;
+  margin-bottom: 1rem;
+  display: block;
+}
+
+.upload-area p {
+  margin: 0.5rem 0;
+  color: #fff;
+}
+
+.upload-area .help-text {
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.upload-area.dragging {
+  border-color: #646cff;
+  background-color: rgba(100, 108, 255, 0.1);
+}
+
+.upload-label {
+  display: block;
+  width: 100%;
+}
+
+.upload-label:hover {
+  cursor: pointer;
+}
+
+.upload-label input[type="file"] {
+  display: none;
+}
+
+.upload-label.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.upload-label.disabled .upload-area {
+  cursor: not-allowed;
 } 

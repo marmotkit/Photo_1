@@ -7,22 +7,31 @@ export interface User {
 
 export type PermissionType = 'view' | 'modify' | 'readonly' | 'full';
 
+export interface AlbumCategory {
+  id: number;
+  name: string;
+  createdAt: string;
+  updatedAt: string;
+}
+
 export interface Album {
-  id: number
-  title: string
-  date: string
-  description: string
-  cover: string
-  files: AlbumFile[]
-  ownerId: number
-  isPublic: boolean
-  permissionType: PermissionType
-  hasPassword: boolean
-  password?: string
-  currentPassword?: string
-  thumbnailCount: number
-  createdAt: string
-  updatedAt: string
+  id: number;
+  title: string;
+  date: string;
+  description: string;
+  cover: string;
+  files: AlbumFile[];
+  ownerId: number;
+  isPublic: boolean;
+  permissionType: PermissionType;
+  hasPassword: boolean;
+  password?: string;
+  currentPassword?: string;
+  thumbnailCount: number;
+  categoryId: number;
+  category?: AlbumCategory;
+  createdAt: string;
+  updatedAt: string;
 }
 
 export interface AlbumFile {

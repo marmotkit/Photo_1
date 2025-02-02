@@ -35,7 +35,7 @@ const formatFileName = (path: string) => {
   return `${name.slice(0, 12)}...${ext}`;
 };
 
-const VideoThumbnail = ({ file }: { file: { path: string; id: number } }) => {
+const VideoThumbnail = ({ file, onDeleteFile }: { file: { id: number, path: string }, onDeleteFile: (fileId: number) => Promise<void> }) => {
   const [isPlaying, setIsPlaying] = useState(false);
   const [thumbnailReady, setThumbnailReady] = useState(false);
   const videoRef = useRef<HTMLVideoElement>(null);
@@ -70,6 +70,11 @@ const VideoThumbnail = ({ file }: { file: { path: string; id: number } }) => {
     document.body.appendChild(link);
     link.click();
     document.body.removeChild(link);
+  };
+
+  const handleDelete = async (e: React.MouseEvent) => {
+    e.stopPropagation();
+    await onDeleteFile(file.id);
   };
 
   return (
@@ -123,6 +128,13 @@ const VideoThumbnail = ({ file }: { file: { path: string; id: number } }) => {
                 title="下載"
               >
                 ⬇️
+              </button>
+              <button 
+                className="action-btn delete"
+                onClick={handleDelete}
+                title="刪除"
+              >
+                🗑️
               </button>
             </div>
           </>
@@ -424,7 +436,7 @@ export function AlbumDetail({
             onMouseLeave={() => setHoveredFile(null)}
           >
             {file.path.toLowerCase().match(/\.(mp4|webm|ogg|mov)$/) ? (
-              <VideoThumbnail file={file} />
+              <VideoThumbnail file={file} onDeleteFile={onDeleteFile} />
             ) : (
               <>
                 <div className="media-item">

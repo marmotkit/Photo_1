@@ -463,6 +463,43 @@ function App() {
     }
   };
 
+  const handleUploadFiles = async (albumId: number, files: FileList, password?: string) => {
+    const formData = new FormData();
+    Array.from(files).forEach(file => {
+      formData.append('files', file);
+    });
+
+    try {
+      const response = await fetch(`http://localhost:5001/api/albums/${albumId}/upload`, {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        throw new Error('上傳失敗');
+      }
+
+      const data = await response.json();
+      
+      // 更新相簿列表
+      const updatedAlbums = albums.map(album => {
+        if (album.id === albumId) {
+          return {
+            ...album,
+            files: [...album.files, ...data.files],
+          };
+        }
+        return album;
+      });
+
+      setAlbums(updatedAlbums);
+      setError(null);
+    } catch (error) {
+      console.error('上傳失敗:', error);
+      throw new Error('上傳失敗，請稍後重試');
+    }
+  };
+
   return (
     <div className="app">
       {error && <div className="error-message">{error}</div>}
@@ -485,6 +522,7 @@ function App() {
             onCreateAlbum={() => setIsCreateModalOpen(true)}
             onShowSettings={() => {/* TODO: 實現展示設置 */}}
             onEditAlbum={handleEditAlbum}
+            onUploadFiles={handleUploadFiles}
           />
           <CreateAlbumModal
             isOpen={isCreateModalOpen}

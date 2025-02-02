@@ -11,6 +11,17 @@ let albums = [];
 let albumIdCounter = 1;
 let userIdCounter = 1;
 
+// 初始化類別數據
+let categories = [
+  {
+    id: 1,
+    name: '通用',
+    createdAt: new Date().toISOString(),
+    updatedAt: new Date().toISOString()
+  }
+];
+let categoryIdCounter = 2;
+
 // 用於加密密碼的函數
 function hashPassword(password) {
   return crypto.createHash('sha256').update(password).digest('hex');
@@ -31,10 +42,7 @@ const upload = multer({ storage: storage });
 const app = express();
 const PORT = 5001;
 
-app.use(cors({
-  origin: 'http://localhost:5173',
-  credentials: true
-}));
+app.use(cors());  // 允許所有來源的請求
 
 app.use(express.json());
 
@@ -50,7 +58,7 @@ app.get("/api/albums", (req, res) => {
 
 // 建立新相簿
 app.post("/api/albums", (req, res) => {
-  const { title, date, description, isPublic, hasPassword, password } = req.body;
+  const { title, date, description, isPublic, hasPassword, password, categoryId } = req.body;
   const now = new Date().toISOString();
   
   const newAlbum = {
@@ -65,6 +73,7 @@ app.post("/api/albums", (req, res) => {
     hasPassword: hasPassword || false,
     password: hasPassword && password ? hashPassword(password) : null,
     permissionType: isPublic ? 'full' : 'view',
+    categoryId: categoryId || 1, // 默認使用 "通用" 類別
     createdAt: now,
     updatedAt: now
   };
@@ -73,10 +82,13 @@ app.post("/api/albums", (req, res) => {
   
   // 返回安全版本的相簿資料（不包含密碼）
   const { password: _, ...safeAlbum } = newAlbum;
+  const category = categories.find(c => c.id === newAlbum.categoryId);
+  
   res.json({
     ...safeAlbum,
     hasPassword: !!newAlbum.password,
-    currentPassword: newAlbum.password
+    currentPassword: newAlbum.password,
+    category
   });
 });
 
@@ -297,6 +309,63 @@ app.put('/api/albums/:id', (req, res) => {
     console.error('更新相簿基本資訊時發生錯誤:', error);
     res.status(500).json({ error: '更新相簿基本資訊失敗' });
   }
+});
+
+// 獲取所有類別
+app.get('/api/categories', (req, res) => {
+  res.json(categories);
+});
+
+// 創建新類別
+app.post('/api/categories', (req, res) => {
+  const { name } = req.body;
+  const now = new Date().toISOString();
+  
+  const newCategory = {
+    id: categoryIdCounter++,
+    name,
+    createdAt: now,
+    updatedAt: now
+  };
+  
+  categories.push(newCategory);
+  res.json(newCategory);
+});
+
+// 更新類別
+app.put('/api/categories/:id', (req, res) => {
+  const { id } = req.params;
+  const { name } = req.body;
+  
+  const category = categories.find(c => c.id === parseInt(id));
+  if (!category) {
+    return res.status(404).json({ error: '類別不存在' });
+  }
+  
+  category.name = name;
+  category.updatedAt = new Date().toISOString();
+  
+  res.json(category);
+});
+
+// 刪除類別（只能刪除沒有相簿的類別）
+app.delete('/api/categories/:id', (req, res) => {
+  const { id } = req.params;
+  const categoryId = parseInt(id);
+  
+  // 檢查是否有相簿使用此類別
+  const hasAlbums = albums.some(album => album.categoryId === categoryId);
+  if (hasAlbums) {
+    return res.status(400).json({ error: '此類別下還有相簿，無法刪除' });
+  }
+  
+  const categoryIndex = categories.findIndex(c => c.id === categoryId);
+  if (categoryIndex === -1) {
+    return res.status(404).json({ error: '類別不存在' });
+  }
+  
+  categories.splice(categoryIndex, 1);
+  res.status(204).send();
 });
 
 // 靜態提供 uploads 資料夾內的檔案

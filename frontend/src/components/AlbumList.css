@@ -1,0 +1,178 @@
+.album-list {
+  background: #1a1a1a;
+  min-height: 100vh;
+}
+
+.top-nav {
+  padding: 1rem 2rem;
+  border-bottom: 1px solid #333;
+}
+
+.nav-tabs {
+  display: flex;
+  gap: 2rem;
+}
+
+.nav-tab {
+  color: #888;
+  background: none;
+  border: none;
+  font-size: 1rem;
+  padding: 0.5rem 0;
+  cursor: pointer;
+  position: relative;
+}
+
+.nav-tab.active {
+  color: #fff;
+}
+
+.nav-tab.active::after {
+  content: '';
+  position: absolute;
+  bottom: -1px;
+  left: 0;
+  width: 100%;
+  height: 2px;
+  background: #fff;
+}
+
+.nav-tab.disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.function-bar {
+  padding: 1rem 2rem;
+  display: flex;
+  align-items: center;
+}
+
+.left-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.action-btn {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background: rgba(255, 255, 255, 0.1);
+  color: #fff;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  transition: all 0.2s ease;
+}
+
+.action-btn:hover {
+  background: rgba(255, 255, 255, 0.2);
+}
+
+.upload-btn {
+  background: rgba(255, 255, 255, 0.15);
+}
+
+.albums-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 1.5rem;
+  padding: 1rem 2rem;
+}
+
+.album-card {
+  position: relative;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+}
+
+.album-cover {
+  position: relative;
+  aspect-ratio: 4/3;
+  background: #2a2a2a;
+  overflow: hidden;
+  border-radius: 4px;
+}
+
+.album-cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s ease;
+}
+
+.album-card:hover .album-cover img {
+  transform: scale(1.05);
+}
+
+.album-placeholder {
+  width: 100%;
+  height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 2rem;
+  color: #666;
+}
+
+.album-stats {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  color: #fff;
+  padding: 2px 8px;
+  border-radius: 12px;
+  font-size: 0.9rem;
+}
+
+.privacy-badge {
+  position: absolute;
+  bottom: 8px;
+  right: 8px;
+  color: #fff;
+}
+
+.album-info {
+  padding: 0.8rem 0;
+}
+
+.album-title {
+  margin: 0;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1rem;
+  font-weight: normal;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: left;
+}
+
+.edit-btn {
+  position: absolute;
+  bottom: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.5);
+  border: none;
+  border-radius: 50%;
+  width: 32px;
+  height: 32px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  cursor: pointer;
+  opacity: 0;
+  transition: opacity 0.2s ease;
+}
+
+.album-card:hover .edit-btn {
+  opacity: 1;
+}
+
+.edit-btn:hover {
+  background: rgba(0, 0, 0, 0.7);
+} 

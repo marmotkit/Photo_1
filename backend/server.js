@@ -5,6 +5,8 @@ const path = require("path");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const fs = require("fs");
+require('dotenv').config();  // 加入這行來載入環境變數
+const { initializeStorage, uploadFile, deleteFile, generateSasUrl } = require('./config/storage');
 
 // 數據文件路徑
 const DATA_DIR = path.join(__dirname, 'data');
@@ -200,76 +202,55 @@ app.delete("/api/albums/:id", (req, res) => {
   res.status(204).send();
 });
 
-// 上傳檔案至指定相簿 (支援單一或多檔案上傳)
-app.post("/api/albums/:id/upload", upload.array("files"), (req, res) => {
+// 修改上傳檔案至指定相簿的處理邏輯
+app.post("/api/albums/:id/upload", upload.array("files"), async (req, res) => {
   const albumId = parseInt(req.params.id);
   const album = albums.find((a) => a.id === albumId);
   if (!album) {
     return res.status(404).json({ message: "相簿不存在" });
   }
   
-  const now = new Date().toISOString();
-  const uploadedFiles = req.files.map((file) => ({
-    id: Math.floor(Math.random() * 10000),
-    filename: file.filename,
-    originalname: file.originalname,
-    path: file.filename,
-    uploadedBy: 1,
-    uploadedAt: now
-  }));
-  
-  album.files = album.files.concat(uploadedFiles);
-  album.updatedAt = now;
-  
-  saveData(); // 保存數據
-  
-  res.json({ message: "上傳成功", files: uploadedFiles });
-});
-
-// 更新相簿權限
-app.put('/api/albums/:id/permissions', (req, res) => {
-  const { id } = req.params;
-  const { isPublic, hasPassword, password, permissionType } = req.body;
-
-  const album = albums.find(a => a.id === parseInt(id));
-  if (!album) {
-    return res.status(404).json({ error: '相簿不存在' });
-  }
-
   try {
-    // 更新相簿權限
-    album.isPublic = isPublic;
-    album.hasPassword = hasPassword;
+    const now = new Date().toISOString();
+    const uploadedFiles = await Promise.all(req.files.map(async (file) => {
+      // 上傳到 Azure Blob Storage
+      const { url, name } = await uploadFile(file);
+      return {
+        id: Math.floor(Math.random() * 10000),
+        filename: name,
+        originalname: file.originalname,
+        path: name,  // 儲存 blob 名稱
+        uploadedBy: 1,
+        uploadedAt: now,
+        url: url  // 儲存 SAS URL
+      };
+    }));
     
-    // 只有在提供新密碼時才更新密碼
-    if (hasPassword && password) {
-      album.password = hashPassword(password);
-    } else if (!hasPassword) {
-      album.password = null;
-    }
+    album.files = album.files.concat(uploadedFiles);
+    album.updatedAt = now;
     
-    // 設置權限類型
-    album.permissionType = isPublic ? 'full' : (permissionType || 'view');
-    album.updatedAt = new Date().toISOString();
-
-    // 返回更新後的相簿資料
-    const response = {
-      ...album,
-      hasPassword: !!album.password,
-      currentPassword: album.password
-    };
-
-    console.log('更新權限成功:', response);
     saveData(); // 保存數據
-    res.json(response);
+    
+    res.json({ message: "上傳成功", files: uploadedFiles });
   } catch (error) {
-    console.error('更新權限時發生錯誤:', error);
-    res.status(500).json({ error: '更新權限失敗' });
+    console.error('上傳檔案時發生錯誤:', error);
+    res.status(500).json({ error: '上傳檔案失敗' });
   }
 });
 
-// 刪除相簿中的檔案
-app.delete("/api/albums/:albumId/files/:fileId", (req, res) => {
+// 修改靜態檔案提供的方式
+app.get('/uploads/:filename', async (req, res) => {
+  try {
+    const sasUrl = generateSasUrl(req.params.filename);
+    res.redirect(sasUrl);
+  } catch (error) {
+    console.error('獲取檔案失敗:', error);
+    res.status(500).json({ error: '獲取檔案失敗' });
+  }
+});
+
+// 修改刪除檔案的處理邏輯
+app.delete("/api/albums/:albumId/files/:fileId", async (req, res) => {
   const albumId = parseInt(req.params.albumId);
   const fileId = parseInt(req.params.fileId);
   
@@ -284,11 +265,8 @@ app.delete("/api/albums/:albumId/files/:fileId", (req, res) => {
   }
 
   try {
-    // 從檔案系統中刪除檔案
-    const filePath = path.join(__dirname, 'uploads', album.files[fileIndex].path);
-    if (fs.existsSync(filePath)) {
-      fs.unlinkSync(filePath);
-    }
+    // 從 Azure Blob Storage 刪除檔案
+    await deleteFile(album.files[fileIndex].path);
 
     // 從相簿中移除檔案記錄
     album.files.splice(fileIndex, 1);
@@ -469,6 +447,9 @@ app.delete('/api/categories/:id', (req, res) => {
 
 // 靜態提供 uploads 資料夾內的檔案
 app.use('/uploads', cors(), express.static('uploads'));
+
+// 初始化 Azure Storage
+initializeStorage().catch(console.error);
 
 app.listen(PORT, () => {
   // 確保上傳目錄存在

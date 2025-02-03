@@ -1,0 +1,564 @@
+.album-detail {
+  padding: 2rem;
+  background: #000;
+  min-height: 100vh;
+}
+
+.album-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 2rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #333;
+}
+
+.album-header h2 {
+  margin: 0;
+  font-size: 1.5rem;
+  color: #fff;
+}
+
+.album-actions {
+  display: flex;
+  gap: 1rem;
+}
+
+.album-actions button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.3s;
+}
+
+.upload-btn {
+  background: #2563eb;
+  color: white;
+}
+
+.upload-btn:hover {
+  background: #1d4ed8;
+}
+
+.delete-btn {
+  background: #dc2626;
+  color: white;
+}
+
+.delete-btn:hover {
+  background: #b91c1c;
+}
+
+.close-btn {
+  background: #374151;
+  color: white;
+}
+
+.close-btn:hover {
+  background: #4b5563;
+}
+
+.album-info-detail {
+  margin-bottom: 2rem;
+  color: #ccc;
+}
+
+.upload-area {
+  border: 2px dashed #444;
+  border-radius: 12px;
+  padding: 2rem;
+  text-align: center;
+  margin-bottom: 2rem;
+  transition: border-color 0.3s, background-color 0.3s;
+}
+
+.upload-area.dragging {
+  border-color: #646cff;
+  background-color: rgba(100, 108, 255, 0.1);
+}
+
+.file-input {
+  display: none;
+}
+
+.upload-label {
+  display: block;
+  cursor: pointer;
+  color: #888;
+}
+
+.upload-label:hover {
+  color: #646cff;
+}
+
+.media-grid {
+  display: grid;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.media-grid.size-small {
+  grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+}
+
+.media-grid.size-medium {
+  grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+}
+
+.media-grid.size-large {
+  grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+}
+
+.media-container {
+  aspect-ratio: 1;
+  overflow: hidden;
+  border-radius: 8px;
+  background: #1a1a1a;
+  position: relative;
+  display: flex;
+  flex-direction: column;
+}
+
+.media-item {
+  flex: 1;
+  position: relative;
+  overflow: hidden;
+}
+
+.media-item img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.3s;
+}
+
+.media-item.video {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  background: #1a1a1a;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  overflow: hidden;
+}
+
+.media-item.video video {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  background: #000;
+}
+
+.video-preview {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  cursor: pointer;
+  overflow: hidden;
+}
+
+.video-preview video {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  pointer-events: none;
+  transition: opacity 0.3s ease;
+}
+
+.video-preview video[controls] {
+  pointer-events: auto;
+  object-fit: contain;
+}
+
+.video-placeholder {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: #1a1a1a;
+  color: #666;
+  z-index: 1;
+}
+
+.video-placeholder .icon {
+  font-size: 3rem;
+  opacity: 0.5;
+}
+
+.video-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.3);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  opacity: 0;
+  transition: opacity 0.3s;
+  z-index: 2;
+}
+
+.video-preview:hover .video-overlay {
+  opacity: 1;
+}
+
+.play-icon {
+  font-size: 3rem;
+  color: white;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+  transition: transform 0.2s;
+}
+
+.video-preview:hover .play-icon {
+  transform: scale(1.1);
+}
+
+.media-actions {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 1rem;
+  opacity: 0;
+  transition: opacity 0.3s;
+  pointer-events: none;
+  z-index: 3;
+}
+
+.media-item:hover .media-actions {
+  opacity: 1;
+  pointer-events: auto;
+}
+
+.media-actions .action-btn {
+  background: rgba(0, 0, 0, 0.6);
+  border: none;
+  color: white;
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.2rem;
+  transition: all 0.2s;
+}
+
+.media-actions .action-btn:hover {
+  transform: scale(1.1);
+  background: rgba(0, 0, 0, 0.8);
+}
+
+.media-actions .action-btn.play:hover {
+  color: #22c55e;
+}
+
+.media-actions .action-btn.download:hover {
+  color: #3b82f6;
+}
+
+.media-item.video.loading {
+  background: #1a1a1a;
+}
+
+.media-item.video.loading .video-placeholder {
+  animation: pulse 1.5s infinite;
+}
+
+/* 調整不同尺寸下的播放圖標大小 */
+.size-small .play-icon {
+  font-size: 2rem;
+}
+
+.size-medium .play-icon {
+  font-size: 3rem;
+}
+
+.size-large .play-icon {
+  font-size: 4rem;
+}
+
+/* 調整不同尺寸下的操作按鈕大小 */
+.size-small .media-actions .action-btn {
+  width: 32px;
+  height: 32px;
+  font-size: 1rem;
+}
+
+.size-large .media-actions .action-btn {
+  width: 48px;
+  height: 48px;
+  font-size: 1.4rem;
+}
+
+.cover-badge {
+  position: absolute;
+  top: 8px;
+  left: 8px;
+  background: rgba(0, 0, 0, 0.6);
+  color: #fbbf24;
+  padding: 4px 8px;
+  border-radius: 4px;
+  font-size: 12px;
+  z-index: 2;
+}
+
+.permission-btn {
+  background: #4b5563;
+  color: white;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.permission-btn:hover {
+  background: #374151;
+}
+
+.permission-btn .icon {
+  font-size: 1rem;
+}
+
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.75);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  z-index: 1000;
+}
+
+.permission-modal {
+  background: #1a1a1a;
+  border-radius: 8px;
+  padding: 1.5rem;
+  width: 90%;
+  max-width: 400px;
+  box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+}
+
+.permission-modal h3 {
+  margin: 0 0 1.5rem 0;
+  color: #fff;
+  font-size: 1.25rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  color: #fff;
+  cursor: pointer;
+}
+
+.form-group input[type="checkbox"],
+.form-group input[type="radio"] {
+  width: 1.2rem;
+  height: 1.2rem;
+  cursor: pointer;
+}
+
+.password-section {
+  margin-top: 1rem;
+  margin-left: 1.7rem;
+}
+
+.password-display,
+.password-edit {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.password-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 1px solid #333;
+  border-radius: 4px;
+  background: #0a0a0a;
+  color: #fff;
+  font-size: 1rem;
+}
+
+.password-input:focus {
+  outline: none;
+  border-color: #2563eb;
+}
+
+.icon-btn {
+  background: none;
+  border: none;
+  color: #666;
+  font-size: 1.2rem;
+  padding: 4px;
+  cursor: pointer;
+  border-radius: 4px;
+  transition: all 0.2s;
+}
+
+.icon-btn:hover {
+  color: #fff;
+  background: #333;
+}
+
+.password-display .password-input {
+  background: #1a1a1a;
+  cursor: default;
+}
+
+.password-edit .password-input {
+  background: #0a0a0a;
+}
+
+.error-message {
+  color: #ef4444;
+  margin: 0.5rem 0;
+  font-size: 0.9rem;
+}
+
+.modal-actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 0.5rem;
+  margin-top: 1.5rem;
+}
+
+.modal-actions button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  font-size: 0.9rem;
+  transition: all 0.2s;
+}
+
+.modal-actions .cancel-btn {
+  background: #374151;
+  color: white;
+}
+
+.modal-actions .cancel-btn:hover {
+  background: #4b5563;
+}
+
+.modal-actions .submit-btn {
+  background: #2563eb;
+  color: white;
+}
+
+.modal-actions .submit-btn:hover {
+  background: #1d4ed8;
+}
+
+.permission-options {
+  margin-top: 1.5rem;
+}
+
+.permission-label {
+  display: block;
+  color: #fff;
+  margin-bottom: 1rem;
+  font-weight: 500;
+}
+
+.permission-option {
+  margin-bottom: 1rem;
+}
+
+.permission-option label {
+  display: flex;
+  align-items: flex-start;
+  gap: 1rem;
+  cursor: pointer;
+  padding: 0.75rem;
+  border-radius: 6px;
+  transition: background-color 0.2s;
+}
+
+.permission-option label:hover {
+  background: #2a2a2a;
+}
+
+.permission-option input[type="radio"] {
+  margin-top: 4px;
+}
+
+.permission-info {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+}
+
+.permission-title {
+  color: #fff;
+  font-weight: 500;
+}
+
+.permission-description {
+  color: #999;
+  font-size: 0.9rem;
+}
+
+.help-text {
+  color: #999;
+  font-size: 0.9rem;
+  margin-top: 0.5rem;
+  margin-left: 1.7rem;
+}
+
+@keyframes pulse {
+  0% {
+    opacity: 0.6;
+  }
+  50% {
+    opacity: 0.3;
+  }
+  100% {
+    opacity: 0.6;
+  }
+}
+
+.media-title {
+  padding: 8px;
+  color: #fff;
+  font-size: 0.9rem;
+  background: #1a1a1a;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  text-align: center;
+}
+
+/* 調整不同尺寸下的標題文字大小 */
+.size-small .media-title {
+  font-size: 0.8rem;
+  padding: 6px;
+}
+
+.size-large .media-title {
+  font-size: 1rem;
+  padding: 10px;
+} 

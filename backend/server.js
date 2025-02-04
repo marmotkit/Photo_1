@@ -5,7 +5,7 @@ const path = require("path");
 const crypto = require("crypto");
 const bcrypt = require("bcrypt");
 const fs = require("fs");
-require('dotenv').config();  // 加入這行來載入環境變數
+require('dotenv').config();
 const { initializeStorage, uploadFile, deleteFile, generateSasUrl } = require('./config/storage');
 
 // 數據文件路徑

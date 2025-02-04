@@ -376,23 +376,49 @@ body {
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  background: var(--surface);
+  background: #2a2a2a;
   padding: 2rem;
-  border-radius: 12px;
-  box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
-  z-index: 1100;
+  border-radius: 8px;
   width: 90%;
   max-width: 400px;
+  z-index: 1000;
 }
 
-.password-dialog-overlay {
-  position: fixed;
-  top: 0;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: rgba(0, 0, 0, 0.75);
-  z-index: 1050;
+.password-dialog h3 {
+  margin-top: 0;
+  color: #fff;
+}
+
+.password-dialog form {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.password-dialog input {
+  padding: 0.5rem;
+  border: 1px solid #444;
+  border-radius: 4px;
+  background: #333;
+  color: #fff;
+}
+
+.password-dialog button {
+  padding: 0.5rem 1rem;
+  border: none;
+  border-radius: 4px;
+  background: #4a90e2;
+  color: #fff;
+  cursor: pointer;
+}
+
+.password-dialog button:hover {
+  background: #357abd;
+}
+
+.password-dialog .error {
+  color: #ff4444;
+  margin-top: 0.5rem;
 }
 
 .error-banner {
@@ -423,7 +449,7 @@ body {
 
 .app {
   min-height: 100vh;
-  background: #000;
+  background-color: #1a1a1a;
   color: #fff;
 }
 
@@ -464,8 +490,12 @@ body {
 }
 
 .error-message {
-  color: #ef4444;
-  margin-bottom: 1rem;
+  color: #ff4444;
+  padding: 1rem;
+  margin: 1rem;
+  background: rgba(255, 68, 68, 0.1);
+  border-radius: 4px;
+  text-align: center;
 }
 
 .modal-actions {
@@ -494,4 +524,19 @@ body {
 
 .modal-actions button[type="submit"]:hover {
   background: #1d4ed8;
+}
+
+.album-detail-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.9);
+  z-index: 1000;
+  overflow-y: auto;
+}
+
+.main-content {
+  padding-top: 60px;
 }

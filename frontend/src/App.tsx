@@ -5,11 +5,30 @@ import { AlbumList } from './components/AlbumList'
 import { Album, AlbumAccess, PermissionType } from './types'
 import './App.css'
 import React from 'react'
+import { BrowserRouter as Router, Route, Routes, Navigate } from 'react-router-dom'
+import { Login } from './components/Login'
+import { UserManagement } from './components/UserManagement'
+import { Navbar } from './components/Navbar'
 
 interface AlbumFile {
   id: number;
   path: string;
   isCover?: boolean;
+}
+
+interface User {
+  id: string;
+  username: string;
+  role: string;
+  permissions: {
+    canManageUsers: boolean;
+    canManageGroups: boolean;
+    canCreateAlbum: boolean;
+    canEditAlbum: boolean;
+    canDeleteAlbum: boolean;
+    canUploadFiles: boolean;
+    canDeleteFiles: boolean;
+  };
 }
 
 function App() {
@@ -25,6 +44,9 @@ function App() {
   const [password, setPassword] = useState('')
   const [albumAccess, setAlbumAccess] = useState<AlbumAccess[]>([])
   const [activeTab, setActiveTab] = useState<'albums' | 'photos' | 'videos'>('albums')
+  const [token, setToken] = useState<string | null>(localStorage.getItem('token'))
+  const [user, setUser] = useState<User | null>(null)
+  const [showSettingsModal, setShowSettingsModal] = useState(false)
 
   useEffect(() => {
     fetchAlbums()
@@ -48,33 +70,38 @@ function App() {
   }
 
   const handleCreateAlbum = async (albumData: {
-    title: string
-    date: string
-    description: string
-    isPublic: boolean
-    hasPassword: boolean
-    password?: string
+    title: string;
+    date: string;
+    description: string;
+    isPublic: boolean;
+    hasPassword: boolean;
+    password?: string;
   }) => {
     try {
       const response = await fetch('http://localhost:5001/api/albums', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(albumData),
-      })
+      });
+
       if (!response.ok) {
-        throw new Error('建立相簿失敗')
+        throw new Error('建立相簿失敗');
       }
-      const newAlbum = await response.json()
-      setAlbums([...albums, newAlbum])
-      setIsCreateModalOpen(false)
-      setError(null)
+
+      const newAlbum = await response.json();
+      setAlbums([...albums, newAlbum]);
+      setIsCreateModalOpen(false);
+      setError(null);
+      return newAlbum;
     } catch (error) {
-      console.error('建立相簿失敗:', error)
-      setError('建立相簿時發生錯誤，請稍後再試')
+      console.error('建立相簿失敗:', error);
+      setError('建立相簿時發生錯誤，請稍後再試');
+      throw error;
     }
-  }
+  };
 
   const handleAlbumClick = (album: Album) => {
     if (album.hasPassword && !albumAccess.find(a => a.albumId === album.id)?.accessGranted) {
@@ -119,64 +146,78 @@ function App() {
     }
   }
 
-  const handleDeleteAlbum = async () => {
-    if (!selectedAlbum) return
+  const handleDeleteAlbum = async (): Promise<void> => {
+    if (!selectedAlbum) return;
 
     try {
       const response = await fetch(`http://localhost:5001/api/albums/${selectedAlbum.id}`, {
         method: 'DELETE',
-      })
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
+      });
+
       if (!response.ok) {
-        throw new Error('刪除相簿失敗')
+        throw new Error('刪除相簿失敗');
       }
-      setAlbums(albums.filter(album => album.id !== selectedAlbum.id))
-      setSelectedAlbum(null)
-      setError(null)
+
+      setAlbums(albums.filter(album => album.id !== selectedAlbum.id));
+      setSelectedAlbum(null);
+      setError(null);
     } catch (error) {
-      console.error('刪除相簿失敗:', error)
-      setError('刪除相簿時發生錯誤，請稍後再試')
+      console.error('刪除相簿失敗:', error);
+      setError('刪除相簿時發生錯誤，請稍後再試');
+      throw error;
     }
-  }
+  };
 
-  const handleUploadPhotos = async (files: FileList) => {
-    if (!selectedAlbum) return
+  const handleUploadPhotos = async (files: FileList): Promise<void> => {
+    if (!selectedAlbum) return;
 
-    const formData = new FormData()
+    const formData = new FormData();
     Array.from(files).forEach(file => {
-      formData.append('files', file)
-    })
+      formData.append('files', file);
+    });
 
     try {
       const response = await fetch(`http://localhost:5001/api/albums/${selectedAlbum.id}/upload`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData,
-      })
+      });
+
       if (!response.ok) {
-        throw new Error('上傳照片失敗')
+        throw new Error('上傳照片失敗');
       }
-      const data = await response.json()
+
+      const data = await response.json();
       
       const updatedAlbum = {
         ...selectedAlbum,
         files: [...selectedAlbum.files, ...data.files],
-      }
-      setSelectedAlbum(updatedAlbum)
+      };
+
+      setSelectedAlbum(updatedAlbum);
       setAlbums(albums.map(album => 
         album.id === selectedAlbum.id ? updatedAlbum : album
-      ))
-      setError(null)
+      ));
+      setError(null);
     } catch (error) {
-      console.error('上傳照片失敗:', error)
-      setError('上傳照片時發生錯誤，請稍後再試')
+      console.error('上傳照片失敗:', error);
+      setError('上傳照片時發生錯誤，請稍後再試');
+      throw error;
     }
-  }
+  };
 
-  const handleSetCover = async (albumId: number, fileId: number) => {
+  const handleSetCover = async (albumId: number, fileId: number): Promise<void> => {
     try {
       const response = await fetch(`http://localhost:5001/api/albums/${albumId}/cover`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({ fileId }),
       });
@@ -185,7 +226,6 @@ function App() {
         throw new Error('設置封面失敗');
       }
 
-      // 更新本地狀態
       const updatedAlbums = albums.map(album => {
         if (album.id === albumId) {
           return {
@@ -202,27 +242,33 @@ function App() {
       setAlbums(updatedAlbums);
       
       if (selectedAlbum?.id === albumId) {
-        setSelectedAlbum(updatedAlbums.find(a => a.id === albumId) || null);
+        const updatedAlbum = updatedAlbums.find(a => a.id === albumId);
+        if (updatedAlbum) {
+          setSelectedAlbum(updatedAlbum);
+        }
       }
 
       setError(null);
     } catch (error) {
       console.error('設置封面失敗:', error);
       setError('設置封面時發生錯誤，請稍後再試');
+      throw error;
     }
   };
 
-  const handleDeleteFile = async (albumId: number, fileId: number) => {
+  const handleDeleteFile = async (albumId: number, fileId: number): Promise<void> => {
     try {
       const response = await fetch(`http://localhost:5001/api/albums/${albumId}/files/${fileId}`, {
         method: 'DELETE',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        }
       });
 
       if (!response.ok) {
         throw new Error('刪除檔案失敗');
       }
 
-      // 更新本地狀態
       const updatedAlbums = albums.map(album => {
         if (album.id === albumId) {
           return {
@@ -236,59 +282,48 @@ function App() {
       setAlbums(updatedAlbums);
       
       if (selectedAlbum?.id === albumId) {
-        setSelectedAlbum(updatedAlbums.find(a => a.id === albumId) || null);
+        const updatedAlbum = updatedAlbums.find(a => a.id === albumId);
+        if (updatedAlbum) {
+          setSelectedAlbum(updatedAlbum);
+        }
       }
 
       setError(null);
     } catch (error) {
       console.error('刪除檔案失敗:', error);
       setError('刪除檔案時發生錯誤，請稍後再試');
+      throw error;
     }
   };
 
-  const handleUpdatePermissions = async (
-    albumId: number,
-    permissions: {
-      isPublic: boolean;
-      hasPassword: boolean;
-      password?: string;
-      permissionType?: PermissionType;
-      title?: string;
-      date?: string;
-      description?: string;
-    }
-  ) => {
+  const handleUpdatePermissions = async (albumId: number, permissions: {
+    isPublic: boolean;
+    hasPassword: boolean;
+    password?: string;
+    permissionType?: PermissionType;
+  }): Promise<void> => {
     try {
-      console.log('發送更新請求，參數:', { albumId, permissions });
-
       const response = await fetch(`http://localhost:5001/api/albums/${albumId}/permissions`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify(permissions),
       });
-
-      console.log('API 響應狀態:', response.status);
 
       if (!response.ok) {
         throw new Error('更新權限失敗');
       }
 
       const updatedAlbum = await response.json();
-      console.log('API 返回的更新後相簿:', updatedAlbum);
+      const updatedAlbums = albums.map(album => 
+        album.id === albumId ? updatedAlbum : album
+      );
 
-      // 更新本地狀態
-      const updatedAlbums = albums.map(album => {
-        console.log('比較 ID:', { currentId: album.id, targetId: albumId });
-        return album.id === albumId ? updatedAlbum : album;
-      });
-
-      console.log('更新後的相簿列表:', updatedAlbums);
       setAlbums(updatedAlbums);
       
       if (selectedAlbum?.id === albumId) {
-        console.log('更新選中的相簿');
         setSelectedAlbum(updatedAlbum);
       }
 
@@ -400,15 +435,14 @@ function App() {
       hasPassword: boolean;
       password?: string;
     }
-  ) => {
+  ): Promise<void> => {
     try {
-      console.log('開始編輯相簿，參數：', { albumId, albumData });
-
-      // 先更新基本資訊
+      // 更新基本資訊
       const basicInfoResponse = await fetch(`http://localhost:5001/api/albums/${albumId}`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           title: albumData.title,
@@ -422,13 +456,13 @@ function App() {
       }
 
       const updatedBasicInfo = await basicInfoResponse.json();
-      console.log('基本資訊更新成功:', updatedBasicInfo);
 
-      // 再更新權限設置
+      // 更新權限設置
       const permissionsResponse = await fetch(`http://localhost:5001/api/albums/${albumId}/permissions`, {
         method: 'PUT',
         headers: {
           'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
         },
         body: JSON.stringify({
           isPublic: albumData.isPublic,
@@ -442,7 +476,6 @@ function App() {
       }
 
       const updatedPermissions = await permissionsResponse.json();
-      console.log('權限更新成功:', updatedPermissions);
 
       // 更新本地狀態
       const updatedAlbums = albums.map(album => 
@@ -456,10 +489,10 @@ function App() {
       }
 
       setError(null);
-      console.log('編輯相簿成功');
     } catch (err) {
       console.error('編輯相簿失敗:', err);
       setError(err instanceof Error ? err.message : '發生錯誤');
+      throw err;
     }
   };
 
@@ -469,93 +502,97 @@ function App() {
       formData.append('files', file);
     });
 
+    if (password) {
+      formData.append('password', password);
+    }
+
     try {
       const response = await fetch(`http://localhost:5001/api/albums/${albumId}/upload`, {
         method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${token}`
+        },
         body: formData,
       });
 
       if (!response.ok) {
-        throw new Error('上傳失敗');
+        throw new Error('上傳檔案失敗');
       }
 
       const data = await response.json();
+      const targetAlbum = albums.find(album => album.id === albumId);
       
-      // 更新相簿列表
-      const updatedAlbums = albums.map(album => {
-        if (album.id === albumId) {
-          return {
-            ...album,
-            files: [...album.files, ...data.files],
-          };
-        }
-        return album;
-      });
+      if (targetAlbum) {
+        const updatedAlbum = {
+          ...targetAlbum,
+          files: [...targetAlbum.files, ...data.files],
+        };
 
-      setAlbums(updatedAlbums);
+        setAlbums(albums.map(album => 
+          album.id === albumId ? updatedAlbum : album
+        ));
+
+        if (selectedAlbum?.id === albumId) {
+          setSelectedAlbum(updatedAlbum);
+        }
+      }
+
       setError(null);
+      return data;
     } catch (error) {
-      console.error('上傳失敗:', error);
-      throw new Error('上傳失敗，請稍後重試');
+      console.error('上傳檔案失敗:', error);
+      setError('上傳檔案時發生錯誤，請稍後再試');
+      throw error;
     }
   };
 
-  return (
-    <div className="app">
-      {error && <div className="error-message">{error}</div>}
-      
-      {selectedAlbum ? (
-        <AlbumDetail
-          album={selectedAlbum}
-          onClose={() => setSelectedAlbum(null)}
-          onUpload={handleUploadPhotos}
-          onDelete={handleDeleteAlbum}
-          onSetCover={(fileId) => handleSetCover(selectedAlbum.id, fileId)}
-          onDeleteFile={(fileId) => handleDeleteFile(selectedAlbum.id, fileId)}
-          onUpdatePermissions={(permissions) => handleUpdatePermissions(selectedAlbum.id, permissions)}
-        />
-      ) : (
-        <>
-          <AlbumList
-            albums={albums}
-            onAlbumClick={handleAlbumClick}
-            onCreateAlbum={() => setIsCreateModalOpen(true)}
-            onShowSettings={() => {/* TODO: 實現展示設置 */}}
-            onEditAlbum={handleEditAlbum}
-            onUploadFiles={handleUploadFiles}
-          />
-          <CreateAlbumModal
-            isOpen={isCreateModalOpen}
-            onClose={() => setIsCreateModalOpen(false)}
-            onSubmit={handleCreateAlbum}
-          />
-        </>
-      )}
+  const handleLogin = (newToken: string, userData: User) => {
+    localStorage.setItem('token', newToken);
+    setToken(newToken);
+    setUser(userData);
+  };
 
-      {/* Password Dialog */}
-      {passwordDialog && (
-        <div className="modal-overlay">
-          <div className="password-modal">
-            <h3>請輸入密碼</h3>
-            <form onSubmit={handlePasswordSubmit}>
-              <input
-                type="password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                placeholder="輸入相簿密碼"
+  const handleLogout = () => {
+    localStorage.removeItem('token');
+    setToken(null);
+    setUser(null);
+  };
+
+  return (
+    <Router>
+      <div className="app">
+        <Navbar user={user} onLogout={handleLogout} />
+        <Routes>
+          <Route path="/login" element={!token ? <Login onLogin={handleLogin} /> : <Navigate to="/" />} />
+          <Route path="/users" element={token ? <UserManagement /> : <Navigate to="/login" />} />
+          <Route path="/" element={
+            <>
+              <AlbumList
+                albums={albums}
+                onAlbumClick={handleAlbumClick}
+                onCreateAlbum={handleCreateAlbum}
+                onShowSettings={() => setShowSettingsModal(true)}
+                onEditAlbum={handleEditAlbum}
+                onUploadFiles={handleUploadFiles}
               />
-              {error && <p className="error-message">{error}</p>}
-              <div className="modal-actions">
-                <button type="button" onClick={() => setPasswordDialog(null)}>
-                  取消
-                </button>
-                <button type="submit">確認</button>
-              </div>
-            </form>
-          </div>
-        </div>
-      )}
-    </div>
+              {selectedAlbum && (
+                <div className="album-detail-overlay">
+                  <AlbumDetail
+                    album={selectedAlbum}
+                    onClose={() => setSelectedAlbum(null)}
+                    onUpload={handleUploadPhotos}
+                    onDelete={handleDeleteAlbum}
+                    onSetCover={(fileId) => handleSetCover(selectedAlbum.id, fileId)}
+                    onDeleteFile={(fileId) => handleDeleteFile(selectedAlbum.id, fileId)}
+                    onUpdatePermissions={(permissions) => handleUpdatePermissions(selectedAlbum.id, permissions)}
+                  />
+                </div>
+              )}
+            </>
+          } />
+        </Routes>
+      </div>
+    </Router>
   )
 }
 

@@ -1,8 +1,8 @@
-import React, { useState, useEffect } from 'react'
-import { Album, AlbumCategory } from '../types'
-import './Modal.css'
+import React, { useState } from 'react'
+import { Album } from '../types'
+import './CreateAlbumModal.css'
 
-interface Props {
+interface CreateAlbumModalProps {
   isOpen: boolean
   onClose: () => void
   onSubmit: (albumData: {
@@ -12,81 +12,75 @@ interface Props {
     isPublic: boolean
     hasPassword: boolean
     password?: string
-    categoryId: number
-  }) => void
+  }) => Promise<void>
   editingAlbum?: Album
 }
 
-export function CreateAlbumModal({ isOpen, onClose, onSubmit, editingAlbum }: Props) {
-  const [title, setTitle] = useState('')
-  const [date, setDate] = useState('')
-  const [description, setDescription] = useState('')
-  const [isPublic, setIsPublic] = useState(true)
-  const [hasPassword, setHasPassword] = useState(false)
+export function CreateAlbumModal({ isOpen, onClose, onSubmit, editingAlbum }: CreateAlbumModalProps) {
+  const [title, setTitle] = useState(editingAlbum?.title || '')
+  const [date, setDate] = useState(editingAlbum?.date || '')
+  const [description, setDescription] = useState(editingAlbum?.description || '')
+  const [isPublic, setIsPublic] = useState(editingAlbum?.isPublic || false)
+  const [hasPassword, setHasPassword] = useState(editingAlbum?.hasPassword || false)
   const [password, setPassword] = useState('')
-  const [categoryId, setCategoryId] = useState(1) // 默認使用 "通用" 類別
-  const [categories, setCategories] = useState<AlbumCategory[]>([])
-  const [error, setError] = useState('')
+  const [error, setError] = useState<string | null>(null)
+  const [isLoading, setIsLoading] = useState(false)
 
-  useEffect(() => {
+  // 當編輯的相簿改變時，更新表單狀態
+  React.useEffect(() => {
     if (editingAlbum) {
       setTitle(editingAlbum.title)
-      setDate(editingAlbum.date || '')
-      setDescription(editingAlbum.description || '')
+      setDate(editingAlbum.date)
+      setDescription(editingAlbum.description)
       setIsPublic(editingAlbum.isPublic)
-      setHasPassword(editingAlbum.hasPassword || false)
-      setCategoryId(editingAlbum.categoryId || 1)
-      setPassword('')
-    } else {
+      setHasPassword(editingAlbum.hasPassword)
+    }
+  }, [editingAlbum])
+
+  if (!isOpen) return null
+
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault()
+    setError(null)
+    setIsLoading(true)
+
+    try {
+      if (!title.trim()) {
+        throw new Error('請輸入相簿標題')
+      }
+
+      if (hasPassword && !password.trim()) {
+        throw new Error('請輸入密碼')
+      }
+
+      await onSubmit({
+        title: title.trim(),
+        date,
+        description: description.trim(),
+        isPublic,
+        hasPassword,
+        password: hasPassword ? password : undefined
+      })
+
+      // 重置表單
       setTitle('')
       setDate('')
       setDescription('')
-      setIsPublic(true)
+      setIsPublic(false)
       setHasPassword(false)
       setPassword('')
-      setCategoryId(1)
+      onClose()
+    } catch (error) {
+      setError(error instanceof Error ? error.message : '創建相簿失敗')
+    } finally {
+      setIsLoading(false)
     }
-  }, [editingAlbum, isOpen])
-
-  useEffect(() => {
-    // 獲取所有類別
-    fetch('http://localhost:5001/api/categories')
-      .then(res => res.json())
-      .then(data => setCategories(data))
-      .catch(err => console.error('獲取類別失敗:', err))
-  }, [])
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault()
-    if (!title.trim()) {
-      setError('請輸入相簿標題')
-      return
-    }
-    if (hasPassword && !password.trim()) {
-      setError('請設定密碼')
-      return
-    }
-    onSubmit({ 
-      title, 
-      date, 
-      description, 
-      isPublic, 
-      hasPassword,
-      password: hasPassword ? password : undefined,
-      categoryId
-    })
   }
-
-  if (!isOpen) return null
 
   return (
     <div className="modal-overlay">
       <div className="modal-content">
-        <div className="modal-header">
-          <h2>{editingAlbum ? '編輯相簿' : '創建相簿'}</h2>
-          <button className="close-icon" onClick={onClose}>&times;</button>
-        </div>
-        
+        <h2>創建新相簿</h2>
         <form onSubmit={handleSubmit}>
           <div className="form-group">
             <label htmlFor="title">相簿標題</label>
@@ -95,104 +89,73 @@ export function CreateAlbumModal({ isOpen, onClose, onSubmit, editingAlbum }: Pr
               id="title"
               value={title}
               onChange={(e) => setTitle(e.target.value)}
-              placeholder="輸入相簿標題"
               required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="category">類別</label>
-            <select
-              id="category"
-              value={categoryId}
-              onChange={(e) => setCategoryId(parseInt(e.target.value))}
-              required
-            >
-              {categories.map(category => (
-                <option key={category.id} value={category.id}>
-                  {category.name}
-                </option>
-              ))}
-            </select>
-          </div>
-
-          <div className="form-group">
-            <label htmlFor="date">建立日期</label>
+            <label htmlFor="date">日期</label>
             <input
               type="date"
               id="date"
               value={date}
               onChange={(e) => setDate(e.target.value)}
-              required
             />
           </div>
 
           <div className="form-group">
-            <label htmlFor="description">相簿描述</label>
+            <label htmlFor="description">描述</label>
             <textarea
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="描述這個相簿..."
               rows={3}
             />
           </div>
 
           <div className="form-group">
-            <label className="checkbox-label">
+            <label>
               <input
                 type="checkbox"
                 checked={isPublic}
-                onChange={(e) => {
-                  setIsPublic(e.target.checked)
-                  if (e.target.checked) {
-                    setHasPassword(false)
-                    setPassword('')
-                  }
-                }}
+                onChange={(e) => setIsPublic(e.target.checked)}
               />
-              <span>公開相簿</span>
+              公開相簿
             </label>
           </div>
 
-          {!isPublic && (
+          <div className="form-group">
+            <label>
+              <input
+                type="checkbox"
+                checked={hasPassword}
+                onChange={(e) => setHasPassword(e.target.checked)}
+              />
+              設置密碼
+            </label>
+          </div>
+
+          {hasPassword && (
             <div className="form-group">
-              <label className="checkbox-label">
-                <input
-                  type="checkbox"
-                  checked={hasPassword}
-                  onChange={(e) => {
-                    setHasPassword(e.target.checked)
-                    if (!e.target.checked) {
-                      setPassword('')
-                    }
-                  }}
-                />
-                <span>設定密碼保護</span>
-              </label>
-              
-              {hasPassword && (
-                <div className="password-input">
-                  <input
-                    type="password"
-                    value={password}
-                    onChange={(e) => setPassword(e.target.value)}
-                    placeholder="輸入相簿密碼"
-                    className="mt-2"
-                  />
-                </div>
-              )}
+              <label htmlFor="password">密碼</label>
+              <input
+                type="password"
+                id="password"
+                value={password}
+                onChange={(e) => setPassword(e.target.value)}
+                required
+              />
             </div>
           )}
 
-          {error && <p className="error-message">{error}</p>}
+          {error && <div className="error-message">{error}</div>}
 
           <div className="modal-actions">
-            <button type="button" onClick={onClose} className="cancel-btn">
+            <button type="button" onClick={onClose} disabled={isLoading}>
               取消
             </button>
-            <button type="submit" className="submit-btn">
-              {editingAlbum ? '保存' : '創建'}
+            <button type="submit" disabled={isLoading}>
+              {isLoading ? '創建中...' : '創建'}
             </button>
           </div>
         </form>

@@ -9,18 +9,18 @@ type ViewSize = 'small' | 'medium' | 'large';
 type PermissionType = 'view' | 'modify' | 'readonly' | 'full';
 
 interface Props {
-  album: Album
-  onClose: () => void
-  onUpload: (files: FileList) => void
-  onDelete: () => void
-  onSetCover: (fileId: number) => Promise<void>
-  onDeleteFile: (fileId: number) => Promise<void>
-  onUpdatePermissions: (permissions: { 
-    isPublic: boolean; 
+  album: Album;
+  onClose: () => void;
+  onUpload: (files: FileList) => Promise<void>;
+  onDelete: () => Promise<void>;
+  onSetCover: (fileId: number) => Promise<void>;
+  onDeleteFile: (fileId: number) => Promise<void>;
+  onUpdatePermissions: (permissions: {
+    isPublic: boolean;
     hasPassword: boolean;
     password?: string;
-    permissionType?: PermissionType 
-  }) => Promise<void>
+    permissionType?: PermissionType;
+  }) => Promise<void>;
 }
 
 const formatFileName = (path: string) => {

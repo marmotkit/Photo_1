@@ -10,27 +10,40 @@ import './AlbumList.css';
 type ViewMode = 'albums' | 'photos' | 'videos';
 type ViewSize = 'small' | 'medium' | 'large';
 
-interface Props {
+interface AlbumListProps {
   albums: Album[];
   onAlbumClick: (album: Album) => void;
-  onCreateAlbum: () => void;
-  onShowSettings: () => void;
-  onEditAlbum: (albumId: string, data: { 
+  onCreateAlbum: (albumData: {
     title: string;
     date: string;
     description: string;
     isPublic: boolean;
     hasPassword: boolean;
     password?: string;
-  }) => void;
+  }) => Promise<void>;
+  onShowSettings: () => void;
+  onEditAlbum: (albumId: string, albumData: any) => Promise<void>;
   onUploadFiles: (albumId: number, files: FileList, password?: string) => Promise<void>;
+}
+
+interface CreateAlbumModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSubmit: (albumData: {
+    title: string;
+    date: string;
+    description: string;
+    isPublic: boolean;
+    hasPassword: boolean;
+    password?: string;
+  }) => Promise<void>;
 }
 
 const getMediaUrl = (path: string) => {
   return `http://localhost:5001/uploads/${path}`;
 };
 
-export function AlbumList({ albums, onAlbumClick, onCreateAlbum, onShowSettings, onEditAlbum, onUploadFiles }: Props) {
+export function AlbumList({ albums, onAlbumClick, onCreateAlbum, onShowSettings, onEditAlbum, onUploadFiles }: AlbumListProps) {
   const [editingAlbum, setEditingAlbum] = useState<Album | null>(null);
   const [showCategoryModal, setShowCategoryModal] = useState(false);
   const [showSettingsModal, setShowSettingsModal] = useState(false);
@@ -39,6 +52,8 @@ export function AlbumList({ albums, onAlbumClick, onCreateAlbum, onShowSettings,
   const [viewMode, setViewMode] = useState<ViewMode>('albums');
   const [viewSize, setViewSize] = useState<ViewSize>('small');
   const [hoveredFile, setHoveredFile] = useState<number | null>(null);
+  const [isCreateModalOpen, setIsCreateModalOpen] = useState(false);
+  const [error, setError] = useState<string | null>(null);
 
   const getAlbumCover = (album: Album) => {
     // 尋找被標記為封面的檔案
@@ -58,7 +73,7 @@ export function AlbumList({ albums, onAlbumClick, onCreateAlbum, onShowSettings,
     setEditingAlbum(album);
   };
 
-  const handleEditSubmit = (data: {
+  const handleEditSubmit = async (data: {
     title: string;
     date: string;
     description: string;
@@ -67,7 +82,7 @@ export function AlbumList({ albums, onAlbumClick, onCreateAlbum, onShowSettings,
     password?: string;
   }) => {
     if (editingAlbum) {
-      onEditAlbum(editingAlbum.id.toString(), data);
+      await onEditAlbum(editingAlbum.id.toString(), data);
       setEditingAlbum(null);
     }
   };
@@ -299,6 +314,42 @@ export function AlbumList({ albums, onAlbumClick, onCreateAlbum, onShowSettings,
     }
   };
 
+  const handleCreateAlbum = async (albumData: {
+    title: string;
+    date: string;
+    description: string;
+    isPublic: boolean;
+    hasPassword: boolean;
+    password?: string;
+  }) => {
+    try {
+      const token = localStorage.getItem('token');
+      if (!token) {
+        throw new Error('請先登入');
+      }
+
+      const response = await fetch('http://localhost:5001/api/albums', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': `Bearer ${token}`
+        },
+        body: JSON.stringify(albumData)
+      });
+
+      if (!response.ok) {
+        const data = await response.json();
+        throw new Error(data.message || '創建相簿失敗');
+      }
+
+      setIsCreateModalOpen(false);
+      await onCreateAlbum(albumData);
+    } catch (error) {
+      setError(error instanceof Error ? error.message : '創建相簿失敗');
+      throw error;
+    }
+  };
+
   return (
     <div className="album-list">
       <nav className="top-nav">
@@ -329,7 +380,7 @@ export function AlbumList({ albums, onAlbumClick, onCreateAlbum, onShowSettings,
           <button className="action-btn upload-btn" onClick={() => setShowUploadModal(true)}>
             <span className="icon">📁</span> 上傳照片/視頻
           </button>
-          <button className="action-btn" onClick={onCreateAlbum}>
+          <button className="action-btn" onClick={() => setIsCreateModalOpen(true)}>
             <span className="icon">➕</span> 創建相簿
           </button>
           <button className="action-btn" onClick={() => setShowCategoryModal(true)}>
@@ -340,6 +391,8 @@ export function AlbumList({ albums, onAlbumClick, onCreateAlbum, onShowSettings,
           </button>
         </div>
       </div>
+
+      {error && <div className="error-message">{error}</div>}
 
       {renderContent()}
 
@@ -369,6 +422,12 @@ export function AlbumList({ albums, onAlbumClick, onCreateAlbum, onShowSettings,
         onClose={() => setShowUploadModal(false)}
         albums={albums}
         onUpload={handleUploadFiles}
+      />
+
+      <CreateAlbumModal
+        isOpen={isCreateModalOpen}
+        onClose={() => setIsCreateModalOpen(false)}
+        onSubmit={handleCreateAlbum}
       />
     </div>
   );
